@@ -1,0 +1,37 @@
+#######################################
+# Syntax Coloring Map For DLLN3X
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+DLLN3X	KEYWORD1
+zigbee_frame	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+_clear	KEYWORD2
+_pack	KEYWORD2
+_depack	KEYWORD2
+_callback	KEYWORD2
+init	KEYWORD2
+recv	KEYWORD2
+send	KEYWORD2
+rled_blink	KEYWORD2
+send_msg	KEYWORD2
+loop	KEYWORD2
+setcallback	KEYWORD2
+read_addr	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
