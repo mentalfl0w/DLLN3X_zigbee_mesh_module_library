@@ -21,7 +21,6 @@ init	KEYWORD2
 recv	KEYWORD2
 send	KEYWORD2
 rled_blink	KEYWORD2
-send_msg	KEYWORD2
 loop	KEYWORD2
 setcallback	KEYWORD2
 read_addr	KEYWORD2

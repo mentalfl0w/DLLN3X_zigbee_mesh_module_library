@@ -18,7 +18,7 @@ void DLLN3X::_clear()
         _DSerial->read();
 }
 
-int DLLN3X::_pack(unsigned char buf[], unsigned char data[], int length)
+int DLLN3X::_pack(uint8_t buf[], uint8_t data[], int length)
 {
     int count = 0;
     
@@ -42,7 +42,7 @@ int DLLN3X::_pack(unsigned char buf[], unsigned char data[], int length)
     return count;
 }
 
-int DLLN3X::_depack(unsigned char buf[], unsigned char data[], int length)
+int DLLN3X::_depack(uint8_t buf[], uint8_t data[], int length)
 {
     int count = 0;
     
@@ -74,13 +74,13 @@ void DLLN3X::recv(zigbee_frame *frame)
     _recv_lock = false;
 }
 
-bool DLLN3X::recv(unsigned char *orig_port,
-                  unsigned char *dest_port, unsigned short *addr,
-                  unsigned char data[], int *length)
+bool DLLN3X::recv(uint8_t *orig_port,
+                  uint8_t *dest_port, uint16_t *addr,
+                  uint8_t data[], int *length)
 {
     _recv_lock = true;
-    unsigned char buf[200] = "";
-    unsigned char head = 0, tail = 0;
+    uint8_t buf[200] = "";
+    uint8_t head = 0, tail = 0;
     head = _DSerial->read();
     if (head == 0xFE)
     {
@@ -112,15 +112,15 @@ bool DLLN3X::recv(unsigned char *orig_port,
     }
 }
 
-bool DLLN3X::send(unsigned char orig_port,
-                  unsigned char dest_port, unsigned short addr,
-                  unsigned char data[], int length)
+bool DLLN3X::send(uint8_t orig_port,
+                  uint8_t dest_port, uint16_t addr,
+                  uint8_t data[], int length)
 {
     if (orig_port<0x80)
         return false;
     
-    unsigned char send_buf[208] = {0xFE}, buf[200] = "";
-    unsigned char head = 0, buf_length = 0;
+    uint8_t send_buf[208] = {0xFE}, buf[200] = "";
+    uint8_t head = 0, buf_length = 0;
     buf_length = _pack(buf, data, length);
     send_buf[1] = length+4;
     send_buf[2] = orig_port;
@@ -132,7 +132,13 @@ bool DLLN3X::send(unsigned char orig_port,
     return _DSerial->write(send_buf, buf_length + 7);
 }
 
-void DLLN3X::rled_blink(unsigned char orig_port, unsigned short addr, unsigned char time)
+bool DLLN3X::send(zigbee_frame *frame)
+{
+    return send(frame->src_port, frame->des_port, (frame->remote_addrH << 8) | (frame->remote_addrL & 0xFF),
+     frame->data, frame->length);
+}
+
+void DLLN3X::rled_blink(uint8_t orig_port, uint16_t addr, uint8_t time)
 {
     uint8_t gap = 5;
     for (int i = 0; i < time; i += gap)
@@ -144,14 +150,14 @@ void DLLN3X::rled_blink(unsigned char orig_port, unsigned short addr, unsigned c
     }
 }
 
-unsigned short DLLN3X::read_addr()
+uint16_t DLLN3X::read_addr()
 {
     if (self_addr!=0)
         return self_addr;
-    unsigned char orig_port = 0xFF, dest_port = 0xFF;
-    unsigned char arg = 0x01;
-    unsigned short addr = 0xFFFF;
-    unsigned char data[60] = "";
+    uint8_t orig_port = 0xFF, dest_port = 0xFF;
+    uint8_t arg = 0x01;
+    uint16_t addr = 0xFFFF;
+    uint8_t data[60] = "";
     int length = 0;
     if (!_online)
     {
@@ -171,35 +177,29 @@ unsigned short DLLN3X::read_addr()
     }
 }
 
-bool DLLN3X::send_msg(unsigned char dest_port, unsigned short addr,
-                  unsigned char data[], int length, unsigned char orig_port)
-{
-    return send(orig_port, dest_port, addr, data, length);
-}
-
 void DLLN3X::loop()
 {
-    unsigned char orig_port = 0xFF, dest_port = 0xFF;
-    unsigned short addr = 0xFFFF;
-    unsigned char data[200] = "";
+    uint8_t orig_port = 0xFF, dest_port = 0xFF;
+    uint16_t addr = 0xFFFF;
+    uint8_t data[200] = "";
     int length = 0;
     if (_DSerial->available()>0&&!_recv_lock)
     {
         recv(&orig_port,&dest_port,&addr,data,&length);
-        Serial.print("Message: ");
+        printf("Message: ");
         for (int i = 0; i < length;i++)
         {
-            Serial.printf("%X ", data[i]);
+            printf("%X ", data[i]);
         }
-        Serial.printf("at port %X from %X:%X\n", dest_port, addr, orig_port);
+        printf("at port %X from %X:%X\n", dest_port, addr, orig_port);
         if (_callback!=nullptr)
             _callback(orig_port, dest_port, addr, data, length);
     }
 }
 
-void DLLN3X::setcallback(void (*callback)(unsigned char orig_port,
-                    unsigned char dest_port, unsigned short addr,
-                    unsigned char data[], int length))
+void DLLN3X::setcallback(void (*callback)(uint8_t orig_port,
+                    uint8_t dest_port, uint16_t addr,
+                    uint8_t data[], int length))
 {
     _callback = callback;
 }
