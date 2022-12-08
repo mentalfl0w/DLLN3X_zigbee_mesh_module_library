@@ -2,6 +2,7 @@
 #define _DLLN3X_H_
 
 #include <Arduino.h>
+#include <SoftwareSerial.h>
 
 typedef struct zigbee_frame
 {
@@ -31,7 +32,7 @@ private:
     bool _online = false, _recv_lock = false;
     int _pack(uint8_t buf[], uint8_t data[], int length);
     int _depack(uint8_t buf[], uint8_t data[], int length);
-    HardwareSerial *_DSerial;
+    Stream *_DSerial;
     void (*_callback) (uint8_t orig_port,
                     uint8_t dest_port, uint16_t addr,
                     uint8_t data[], int length)=nullptr;
@@ -39,7 +40,8 @@ private:
 public:
     DLLN3X();
     ~DLLN3X();
-    void init(HardwareSerial *DSerial = &Serial1);
+    void init(HardwareSerial *DSerial);
+    void init(SoftwareSerial *DSerial);
     void recv(zigbee_frame *frame);
     bool recv(uint8_t *orig_port,
               uint8_t *dest_port, uint16_t *addr,

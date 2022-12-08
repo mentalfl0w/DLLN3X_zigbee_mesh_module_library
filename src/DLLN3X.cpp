@@ -6,7 +6,16 @@ DLLN3X::~DLLN3X() {}
 void DLLN3X::init(HardwareSerial *DSerial)
 {
     _DSerial = DSerial;
-    _DSerial->begin(115200);
+    DSerial->begin(115200);
+    rled_blink();
+    _clear();
+    read_addr();
+}
+
+void DLLN3X::init(SoftwareSerial *DSerial)
+{
+    _DSerial = DSerial;
+    DSerial->begin(115200);
     rled_blink();
     _clear();
     read_addr();

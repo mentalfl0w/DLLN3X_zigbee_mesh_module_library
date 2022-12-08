@@ -19,7 +19,7 @@ void zigbee_call_back(uint8_t orig_port,
 }
 
 void setup() {
-  dlln33.init(&Serial1);
+  dlln33.init(&Serial);// could be used like HardwareSerial(Serial1, Serial2 and etc.) or SoftwareSerial
   dlln33.setcallback(zigbee_call_back);
   printf("DLLN33 addr is 0x%X\n", dlln33.read_addr());
   zframe.src_port = 0x81;
