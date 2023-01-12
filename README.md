@@ -2,6 +2,10 @@
 This library allows you to use DLLN3X ZigBee mesh module very easily.
 
 # Change Log
+**V1.0.3 2023.1.12**
+
+- Bug fixed for example.
+
 **V1.0.2 2022.12.8**
 
 - Bug fixed.
