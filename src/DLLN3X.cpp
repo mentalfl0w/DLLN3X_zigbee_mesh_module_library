@@ -8,7 +8,6 @@ void DLLN3X::init(HardwareSerial *DSerial)
     _DSerial = DSerial;
     DSerial->begin(115200);
     rled_blink();
-    _clear();
     read_addr();
 }
 
@@ -17,7 +16,6 @@ void DLLN3X::init(SoftwareSerial *DSerial)
     _DSerial = DSerial;
     DSerial->begin(115200);
     rled_blink();
-    _clear();
     read_addr();
 }
 
@@ -90,6 +88,8 @@ bool DLLN3X::recv(uint8_t *orig_port,
     _recv_lock = true;
     uint8_t buf[200] = "";
     uint8_t head = 0, tail = 0;
+    if(_DSerial->available()<6)
+        return false;
     head = _DSerial->read();
     if (head == 0xFE)
     {
@@ -102,13 +102,16 @@ bool DLLN3X::recv(uint8_t *orig_port,
         int count = 0;
         for (int i = 0; i < *length; i++)
         {
+            while(_DSerial->available()<1);
             buf[count++] = _DSerial->read();
             if (buf[count-1]==0xFE)
             {
+                while(_DSerial->available()<1);
                 buf[count++]=_DSerial->read();
             }
         }
         *length = count;
+        while(_DSerial->available()<1);
         _DSerial->read(); // read pkg tail
         *length = _depack(buf, data, *length);
         _recv_lock = false;
@@ -127,7 +130,6 @@ bool DLLN3X::send(uint8_t orig_port,
 {
     if (orig_port<0x80)
         return false;
-    
     uint8_t send_buf[208] = {0xFE}, buf[200] = "";
     uint8_t head = 0, buf_length = 0;
     buf_length = _pack(buf, data, length);
@@ -155,7 +157,7 @@ void DLLN3X::rled_blink(uint8_t orig_port, uint16_t addr, uint8_t time)
         if (i%2!=0)
             send(orig_port, 0x20, addr, &gap, 1);
         else
-            delay(gap*100);
+            delay(gap*200);
     }
 }
 
@@ -168,13 +170,11 @@ uint16_t DLLN3X::read_addr()
     uint16_t addr = 0xFFFF;
     uint8_t data[60] = "";
     int length = 0;
-    if (!_online)
-    {
-        _clear();
-        _online = true;
-    }
     send(0x80, 0x21, 0x0000, &arg, 1);
+    while(_DSerial->available()<10);
+    _recv_lock = true;
     recv(&orig_port, &dest_port, &addr, data, &length);
+    _recv_lock = false;
     if (orig_port!=0x21||dest_port!=0x80||addr !=0x0000||length!=3||data[0]!=0x21)
     {
         return 0;
@@ -192,15 +192,19 @@ void DLLN3X::loop()
     uint16_t addr = 0xFFFF;
     uint8_t data[200] = "";
     int length = 0;
-    if (_DSerial->available()>0&&!_recv_lock)
+    if (_DSerial->available()>7&&!_recv_lock)
     {
         recv(&orig_port,&dest_port,&addr,data,&length);
-        printf("Message: ");
+        Serial.print("Message: ");
         for (int i = 0; i < length;i++)
         {
-            printf("%X ", data[i]);
+            char temp[3];
+            sprintf(temp, "%02X ", data[i]);
+            Serial.print(temp);
         }
-        printf("at port %X from %X:%X\n", dest_port, addr, orig_port);
+        char temp[200];
+        sprintf(temp, "at port %02X from %04X:%02X.", dest_port, addr, orig_port);
+        Serial.println(temp);
         if (_callback!=nullptr)
             _callback(orig_port, dest_port, addr, data, length);
     }
