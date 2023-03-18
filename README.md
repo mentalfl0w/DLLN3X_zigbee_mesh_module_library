@@ -19,6 +19,10 @@ This library is now complete, the remaining work is mainly maintenance and bug f
 
 # Change Log
 
+**V1.1.1 2023.3.18**
+
++ Fix the bug of incomplete copy.
+
 **V1.1.0 2023.3.18**
 
 + Completely rewritten.

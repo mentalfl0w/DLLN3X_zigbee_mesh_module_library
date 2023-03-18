@@ -217,9 +217,14 @@ public:
     {
         ZigbeeFrame temp(this);
         temp.addData(zf._data);
+        temp.get_package();
         return temp;
     };
-    void operator+=(const ZigbeeFrame& zf) { addData(zf._data); };
+    void operator+=(const ZigbeeFrame& zf) 
+    {
+        addData(zf._data); 
+        get_package();
+    };
     void operator=(const ZigbeeFrame& zf)
     {
         _length = zf._length;
@@ -235,6 +240,7 @@ public:
     {
         ZigbeeFrame temp(this);
         temp.addData(data);
+        temp.get_package(); // to get more time let copy finished.
         return temp;
     };
     uint8_t& operator[](uint8_t i)
@@ -242,7 +248,11 @@ public:
         get_package();
         return _package[i];
     };
-    void operator+=(char* data) { addData(data, (uint8_t)strlen(data)); };
+    void operator+=(char* data) 
+    {
+        addData(data, (uint8_t)strlen(data)); 
+        get_package();
+    };
     friend std::ostream& operator<<(std::ostream& os, const ZigbeeFrame& zf)
     {
         os << "src_port:" << zf._src_port << '\n'
