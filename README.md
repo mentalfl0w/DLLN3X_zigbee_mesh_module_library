@@ -1,21 +1,30 @@
 # DLLN3X_zigbee_mesh_module_library
 This library allows you to use DLLN3X ZigBee mesh module very easily.
 
+This library is now complete, the remaining work is mainly maintenance and bug fixes, welcome feedback by opening issues.
+
 # Available Features
 
 1. Basic message sending and receiving.
 2. Module address reading.
 3. On-chip red led flashing control.
-4. Configuration reading, modification (baud rate, address, etc.).(TODO)
-5. Error Report.(TODO)
-6. Link quality test.(TODO)
-7. On-chip pin control.(TODO)
+4. Configuration reading, modification (baud rate, address, etc.).
+5. Error Report.
+6. Link quality test.
+7. On-chip pin control.
 
 # Example run results
 
 ![example](./imgs/example.png)
 
 # Change Log
+
+**V1.1.0 2023.3.18**
+
++ Completely rewritten.
++ Join the ZigbeeFrame container.
++ Greatly improve stability.
++ Supports configuration reading and modification, link quality testing, on-board pin control, error reporting, etc.
 
 **V1.0.4 2023.1.26**
 

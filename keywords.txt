@@ -7,24 +7,53 @@
 #######################################
 
 DLLN3X	KEYWORD1
-zigbee_frame	KEYWORD1
+ZigbeeFrame	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
-_clear	KEYWORD2
-_pack	KEYWORD2
-_depack	KEYWORD2
-_callback	KEYWORD2
-init	KEYWORD2
-recv	KEYWORD2
-send	KEYWORD2
-rled_blink	KEYWORD2
-loop	KEYWORD2
-setcallback	KEYWORD2
-read_addr	KEYWORD2
-
+setDesPort	KEYWORD2
+setSrcPort	KEYWORD2
+setRemoteAddr	KEYWORD2
+getDesPort	KEYWORD2
+getSrcPort	KEYWORD2
+getRemoteAddr	KEYWORD2
+getLength	KEYWORD2
+getDataLength	KEYWORD2
+getData 	KEYWORD2
+setData 	KEYWORD2
+addData 	KEYWORD2
+clear   	KEYWORD2
+data    	KEYWORD2
+data_size	KEYWORD2
+size    	KEYWORD2
+append  	KEYWORD2
+pack    	KEYWORD2
+depack  	KEYWORD2
+make_package 	KEYWORD2
+get_package	KEYWORD2
+load_package	KEYWORD2
+print   	KEYWORD2
+init    	KEYWORD2
+recv    	KEYWORD2
+send    	KEYWORD2
+send_cmd   	KEYWORD2
+rled_blink    	KEYWORD2
+loop    	KEYWORD2
+setcallback    	KEYWORD2
+rw_config  	KEYWORD2
+read_network_id KEYWORD2
+set_network_id  KEYWORD2
+read_channel 	KEYWORD2
+set_channel    	KEYWORD2
+read_addr    	KEYWORD2
+set_addr    	KEYWORD2
+read_baudrate  	KEYWORD2
+set_baudrate	KEYWORD2
+soft_reboot	KEYWORD2
+get_link_quality KEYWORD2
+pin_control	KEYWORD2
 #######################################
 # Instances (KEYWORD2)
 #######################################

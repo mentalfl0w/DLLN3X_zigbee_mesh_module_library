@@ -1,218 +1,290 @@
 #include "DLLN3X.h"
 
-DLLN3X::DLLN3X(){}
-DLLN3X::~DLLN3X() {}
+using namespace zigbee_protocol;
 
-void DLLN3X::init(HardwareSerial *DSerial)
+DLLN3X::DLLN3X() { }
+DLLN3X::~DLLN3X() { }
+
+void DLLN3X::init(HardwareSerial* DSerial)
 {
     _DSerial = DSerial;
     DSerial->begin(115200);
+    DSerial->setTimeout(10000);
     rled_blink();
     read_addr();
+    read_baudrate();
+    read_channel();
+    read_network_id();
 }
 
-void DLLN3X::init(SoftwareSerial *DSerial)
+#if __has_include(<SoftwareSerial.h>)
+void DLLN3X::init(SoftwareSerial* DSerial)
 {
     _DSerial = DSerial;
     DSerial->begin(115200);
+    DSerial->setTimeout(10000);
     rled_blink();
     read_addr();
+    read_baudrate();
+    read_channel();
+    read_network_id();
 }
+#endif
 
-void DLLN3X::_clear()
+ZigbeeFrame DLLN3X::recv(bool non_blocked)
 {
-    while (_DSerial->available())
-        _DSerial->read();
-}
-
-int DLLN3X::_pack(uint8_t buf[], uint8_t data[], int length)
-{
-    int count = 0;
-    
-    for (int i = 0; i < length; i++)
-    {
-        if (data[i] == 0xFE)
-        {
-            buf[count++] = data[i];
-            buf[count++] = 0xFC;
-        }
-        else if (data[i] == 0xFF)
-        {
-            buf[count++] = 0xFE;
-            buf[count++] = 0xFD;
-        }
-        else
-        {
-            buf[count++] = data[i];
-        }
+    uint8_t buf[65] = "", length = 0;
+    ZigbeeFrame zf;
+    if (non_blocked) {
+        if (_DSerial->available() < 6)
+            return zf;
     }
-    return count;
-}
-
-int DLLN3X::_depack(uint8_t buf[], uint8_t data[], int length)
-{
-    int count = 0;
-    
-    for (int i = 0; i < length; i++)
-    {
-        if (buf[i] != 0xFE)
-        {
-            data[count++] = buf[i];
-        }
-        else if (buf[i + 1] == 0xFD)
-        {
-            data[count++] = 0xFF;
-            i++;
-        }
-        else if (buf[i + 1] == 0xFC)
-        {
-            data[count++] = 0xFE;
-            i++;
-        }
-    }
-    return count;
-}
-
-void DLLN3X::recv(zigbee_frame *frame)
-{
     _recv_lock = true;
-    _DSerial->readBytesUntil(0xFF, (char *)frame, 64);
-    _DSerial->read();
+    length = _DSerial->readBytesUntil(0xFF, buf, 65);
+    buf[length] = _DSerial->read();
     _recv_lock = false;
+    zf.load_package(buf, length + 1);
+    return zf;
 }
 
-bool DLLN3X::recv(uint8_t *orig_port,
-                  uint8_t *dest_port, uint16_t *addr,
-                  uint8_t data[], int *length)
+bool DLLN3X::send(ZigbeeFrame zf)
 {
-    _recv_lock = true;
-    uint8_t buf[200] = "";
-    uint8_t head = 0, tail = 0;
-    if(_DSerial->available()<6)
+    if (zf.getSrcPort() < 0x80)
         return false;
-    head = _DSerial->read();
-    if (head == 0xFE)
-    {
-        *length = _DSerial->read();
-        *length -= 4;
-        *orig_port = _DSerial->read();
-        *dest_port = _DSerial->read();
-        *addr = _DSerial->read();
-        *addr += _DSerial->read() << 8;
-        int count = 0;
-        for (int i = 0; i < *length; i++)
-        {
-            while(_DSerial->available()<1);
-            buf[count++] = _DSerial->read();
-            if (buf[count-1]==0xFE)
-            {
-                while(_DSerial->available()<1);
-                buf[count++]=_DSerial->read();
-            }
-        }
-        *length = count;
-        while(_DSerial->available()<1);
-        _DSerial->read(); // read pkg tail
-        *length = _depack(buf, data, *length);
-        _recv_lock = false;
-        return true;
-    }
-    else
-    {
-        _recv_lock = false;
-        return false;
-    }
+    return _DSerial->write(zf.data(), zf.size());
 }
 
-bool DLLN3X::send(uint8_t orig_port,
-                  uint8_t dest_port, uint16_t addr,
-                  uint8_t data[], int length)
+bool DLLN3X::send_cmd(uint8_t des_port, uint8_t arg, uint8_t* data, uint8_t data_length)
 {
-    if (orig_port<0x80)
+    ZigbeeFrame zf(0x80, des_port, 0x0000);
+    if (data_length - 4 > 63 - 1)
         return false;
-    uint8_t send_buf[208] = {0xFE}, buf[200] = "";
-    uint8_t head = 0, buf_length = 0;
-    buf_length = _pack(buf, data, length);
-    send_buf[1] = length+4;
-    send_buf[2] = orig_port;
-    send_buf[3] = dest_port;
-    send_buf[4] = addr & 0xFF;
-    send_buf[5] = (addr & 0xFF00) >> 8;
-    memcpy(send_buf + 6, buf, buf_length);
-    send_buf[6 + buf_length] = 0xFF;
-    return _DSerial->write(send_buf, buf_length + 7);
+    zf.append(arg);
+    zf.addData(data, data_length);
+    return send(zf);
 }
 
-bool DLLN3X::send(zigbee_frame *frame)
-{
-    return send(frame->src_port, frame->des_port, (frame->remote_addrH << 8) | (frame->remote_addrL & 0xFF),
-     frame->data, frame->length);
-}
-
-void DLLN3X::rled_blink(uint8_t orig_port, uint16_t addr, uint8_t time)
+void DLLN3X::rled_blink(uint8_t time)
 {
     uint8_t gap = 5;
-    for (int i = 0; i < time; i += gap)
-    {
-        if (i%2!=0)
-            send(orig_port, 0x20, addr, &gap, 1);
+    for (int i = 0; i < time; i += gap) {
+        if (i % 2 != 0)
+            send_cmd(0x20, gap);
         else
-            delay(gap*200);
+            delay(gap * 250);
     }
 }
 
 uint16_t DLLN3X::read_addr()
 {
-    if (self_addr!=0)
-        return self_addr;
-    uint8_t orig_port = 0xFF, dest_port = 0xFF;
-    uint8_t arg = 0x01;
-    uint16_t addr = 0xFFFF;
-    uint8_t data[60] = "";
-    int length = 0;
-    send(0x80, 0x21, 0x0000, &arg, 1);
-    while(_DSerial->available()<10);
-    _recv_lock = true;
-    recv(&orig_port, &dest_port, &addr, data, &length);
-    _recv_lock = false;
-    if (orig_port!=0x21||dest_port!=0x80||addr !=0x0000||length!=3||data[0]!=0x21)
+    if (_self_addr != 0)
+        return _self_addr;
+    _self_addr = rw_config(CONFIG::ADDR);
+    return _self_addr;
+}
+
+uint8_t DLLN3X::set_addr(uint16_t addr)
+{
+    uint8_t resp = rw_config(CONFIG::ADDR, addr, CONFIG_RW_MASK::WRITE);
+    if (resp == CONFIG_RESPONSE::DONE)
     {
-        return 0;
+        _self_addr = addr;
+        soft_reboot();
+    }
+    return resp;
+}
+
+uint32_t DLLN3X::read_baudrate()
+{
+    if (_self_baud_rate != 0)
+        return _self_baud_rate;
+    uint8_t arg = rw_config(CONFIG::BAUDRATE);
+    _self_baud_rate = _baud_rate_list[arg];
+    return _self_baud_rate;
+}
+
+uint8_t DLLN3X::set_baudrate(uint32_t baud_rate)
+{
+    uint8_t arg = 0;
+    for (uint8_t i = 0; i < 13; i++)
+    {
+        if (baud_rate == _baud_rate_list[i])
+        {
+            arg = i;
+            break;
+        }
+    }
+    uint8_t resp = rw_config(CONFIG::BAUDRATE, arg, CONFIG_RW_MASK::WRITE);
+    if (resp == CONFIG_RESPONSE::DONE)
+    {
+        _self_baud_rate = baud_rate;
+        soft_reboot();
+    }
+    return resp;
+}
+
+uint8_t DLLN3X::read_network_id()
+{
+    if (_self_network_id != 0)
+        return _self_network_id;
+    _self_network_id = rw_config(CONFIG::NETWORKID);
+    return _self_network_id;
+}
+
+uint8_t DLLN3X::set_network_id(uint16_t network_id)
+{
+    uint8_t resp = rw_config(CONFIG::NETWORKID, network_id, CONFIG_RW_MASK::WRITE);
+    if (resp == CONFIG_RESPONSE::DONE)
+    {
+        _self_network_id = network_id;
+        soft_reboot();
+    }
+    return resp;
+}
+
+uint8_t DLLN3X::read_channel()
+{
+    if (_self_channel != 0)
+        return _self_channel;
+    _self_channel = rw_config(CONFIG::CHANNEL);
+    return _self_channel;
+}
+
+uint8_t DLLN3X::set_channel(uint8_t channel)
+{
+    uint8_t resp = rw_config(CONFIG::CHANNEL, channel, CONFIG_RW_MASK::WRITE);
+    if (resp == CONFIG_RESPONSE::DONE)
+    {
+        _self_channel = channel;
+        soft_reboot();
+    }
+    return resp;
+}
+
+uint16_t DLLN3X::rw_config(CONFIG arg, uint16_t data, CONFIG_RW_MASK mask)
+{
+    uint8_t cmd_arg = arg|mask;
+    if (mask == CONFIG_RW_MASK::WRITE)
+    {
+        if (arg == CONFIG::ADDR || arg == CONFIG::NETWORKID)
+        {
+            send_cmd(0x21, cmd_arg, (uint8_t *)&data, 2);
+        }
+        else
+            send_cmd(0x21, cmd_arg, (uint8_t *)&data, 1);
     }
     else
-    {
-        this->self_addr = data[1] + (data[2] << 8);
-        return this->self_addr;
+        send_cmd(0x21, cmd_arg);
+    ZigbeeFrame zf = recv(false);
+    if (zf.getSrcPort() != 0x21 || zf.getDesPort() != 0x80 || zf.getRemoteAddr() != 0x0000)
+        return 0;
+    switch (arg) {
+    case CONFIG::ADDR: {
+        if (zf.getDataLength() != 3 || zf.getData()[0] != 0x21) {
+            if (zf.getData()[0] != CONFIG_RESPONSE::DONE)
+            {
+                Serial.print("DLLN3X write config error: 0x");
+                Serial.println(zf.getData()[0], HEX);
+            }
+            return zf.getData()[0];
+        } else
+            return (zf.getData()[2] << 8) | zf.getData()[1];
     }
+    case CONFIG::NETWORKID: {
+        if (zf.getDataLength() != 3 || zf.getData()[0] != 0x22) {
+            if (zf.getData()[0] != CONFIG_RESPONSE::DONE)
+            {
+                Serial.print("DLLN3X write config error: 0x");
+                Serial.println(zf.getData()[0], HEX);
+            }
+            return zf.getData()[0];
+        } else
+            return (zf.getData()[2] << 8) | zf.getData()[1];
+    }
+    case CONFIG::CHANNEL: {
+        if (zf.getDataLength() != 2 || zf.getData()[0] != 0x23) {
+            if (zf.getData()[0] != CONFIG_RESPONSE::DONE)
+            {
+                Serial.print("DLLN3X write config error: 0x");
+                Serial.println(zf.getData()[0], HEX);
+            }
+            return zf.getData()[0];
+        } else
+            return zf.getData()[1];
+    }
+    case CONFIG::BAUDRATE: {
+        if (zf.getDataLength() != 2 || zf.getData()[0] != 0x24) {
+           if (zf.getData()[0] != CONFIG_RESPONSE::DONE)
+            {
+                Serial.print("DLLN3X write config error: 0x");
+                Serial.println(zf.getData()[0], HEX);
+            }
+            return zf.getData()[0];
+        } else
+            return zf.getData()[1];
+    }
+    default:
+        return CONFIG_RESPONSE::CMD_ERROR;
+    }
+}
+
+void DLLN3X::soft_reboot()
+{
+    send_cmd(0x21, CONFIG::SOFT_REBOOT);
+    _self_addr = 0;
+    _self_baud_rate = 0;
+    _self_channel = 0;
+    _self_network_id = 0;
+}
+
+uint8_t DLLN3X::get_link_quality(uint16_t des_addr, uint16_t src_addr)
+{
+    if (des_addr == 0x0000 || des_addr == 0xFFFF)
+        return CONFIG_RESPONSE::CMD_ERROR;
+    ZigbeeFrame zf(0x80, 0x23, src_addr), r_zf;
+    zf.addData((uint8_t *)&des_addr, 2);
+    r_zf = recv(false);
+    uint16_t pkg_des_addr = (r_zf.getData()[1] << 8) | r_zf.getData()[0];
+    if (pkg_des_addr != des_addr)
+        return CONFIG_RESPONSE::PKG_DATA_ERROR;
+    else
+        return r_zf.getData()[2];
+}
+
+enum DLLN3X::PIN_CONTROL DLLN3X::pin_control(PIN pin, PIN_CONTROL cmd)
+{
+    send_cmd(pin, cmd);
+    if (cmd == PIN_CONTROL::READ_PIN)
+    {
+        ZigbeeFrame zf = recv(false);
+        return PIN_CONTROL(zf.getData()[0] ^ 0x10);
+    }
+    return cmd;
 }
 
 void DLLN3X::loop()
 {
-    uint8_t orig_port = 0xFF, dest_port = 0xFF;
-    uint16_t addr = 0xFFFF;
-    uint8_t data[200] = "";
-    int length = 0;
-    if (_DSerial->available()>7&&!_recv_lock)
-    {
-        recv(&orig_port,&dest_port,&addr,data,&length);
+    if (_DSerial->available() > 7 && !_recv_lock) {
+        ZigbeeFrame zf = recv();
         Serial.print("Message: ");
-        for (int i = 0; i < length;i++)
-        {
+        for (int i = 0; i < zf.size(); i++) {
             char temp[3];
-            sprintf(temp, "%02X ", data[i]);
+            sprintf(temp, "%02X ", zf[i]);
             Serial.print(temp);
         }
-        char temp[200];
-        sprintf(temp, "at port %02X from %04X:%02X.", dest_port, addr, orig_port);
+        char temp[30];
+        sprintf(temp, "at port %02X from %04X:%02X.", zf.getDesPort(), zf.getRemoteAddr(), zf.getSrcPort());
         Serial.println(temp);
-        if (_callback!=nullptr)
-            _callback(orig_port, dest_port, addr, data, length);
+        if (zf.getSrcPort() == 0x22)
+        {
+            Serial.print("DLLN3X send msg error: 0x");
+            Serial.print(zf.getData()[0], HEX);
+            Serial.print(", Send data to incorrect port: 0x");
+            Serial.print(zf.getData()[1], HEX);
+        }
+        if (_callback != nullptr)
+            _callback(zf);
     }
 }
 
-void DLLN3X::setcallback(void (*callback)(uint8_t orig_port,
-                    uint8_t dest_port, uint16_t addr,
-                    uint8_t data[], int length))
-{
-    _callback = callback;
-}
+void DLLN3X::setcallback(void (*callback)(ZigbeeFrame& zf)) { _callback = callback; }
