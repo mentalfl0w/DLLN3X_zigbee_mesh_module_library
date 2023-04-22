@@ -1,6 +1,7 @@
 #ifndef _ZIGBEEFRAME_H_
 #define _ZIGBEEFRAME_H_
 #include <Arduino.h>
+#if __has_include(<vector>)
 #include <cstring>
 #include <iostream>
 #include <vector>
@@ -70,9 +71,9 @@ public:
     uint8_t getDesPort() { return _des_port; };
     uint8_t getSrcPort() { return _src_port; };
     uint16_t getRemoteAddr() { return _remote_addr; };
-    uint8_t getLength(){ return _data.size() + 4;};
-    uint8_t getDataLength(){ return _data.size();};
-    std::vector<uint8_t>& getData(){ return _data; };
+    uint8_t getLength() { return _data.size() + 4; };
+    uint8_t getDataLength() { return _data.size(); };
+    std::vector<uint8_t>& getData() { return _data; };
     void setData(uint8_t* data, uint8_t length)
     {
         _data.clear();
@@ -163,23 +164,19 @@ public:
         make_package(_src_port, _des_port, _remote_addr, _package, _data, _packed_data);
         return _package;
     };
-    void load_package(std::vector <uint8_t> &buf)
-    {
-        load_package(buf.data(),buf.size());
-    };
-    void load_package(uint8_t *buf, uint8_t length)
+    void load_package(std::vector<uint8_t>& buf) { load_package(buf.data(), buf.size()); };
+    void load_package(uint8_t* buf, uint8_t length)
     {
         _packed_data.clear();
-        for (uint8_t i=0;i<length;i++)
-        {
+        for (uint8_t i = 0; i < length; i++) {
             _package.push_back(buf[i]);
-            if (i>5 && i<length-1)
+            if (i > 5 && i < length - 1)
                 _packed_data.push_back(buf[i]);
         }
         _length = _package[1];
         _src_port = _package[2];
         _des_port = _package[3];
-        _remote_addr = _package[4] | (_package[5]<<8);
+        _remote_addr = _package[4] | (_package[5] << 8);
         depack(_data, _packed_data);
     };
     void print()
@@ -220,9 +217,9 @@ public:
         temp.get_package();
         return temp;
     };
-    void operator+=(const ZigbeeFrame& zf) 
+    void operator+=(const ZigbeeFrame& zf)
     {
-        addData(zf._data); 
+        addData(zf._data);
         get_package();
     };
     void operator=(const ZigbeeFrame& zf)
@@ -248,9 +245,9 @@ public:
         get_package();
         return _package[i];
     };
-    void operator+=(char* data) 
+    void operator+=(char* data)
     {
-        addData(data, (uint8_t)strlen(data)); 
+        addData(data, (uint8_t)strlen(data));
         get_package();
     };
     friend std::ostream& operator<<(std::ostream& os, const ZigbeeFrame& zf)
@@ -266,4 +263,8 @@ public:
     }
 };
 }
+#else
+#error Your Board Didn't support STL, Please install "ArduinoSTL" Library.
+#error If your board are Arduino AVR architecture(like Arduino Uno), you have to comment 'const std::nothrow_t std::nothrow = { };' in 'ArduinoSTL/src/new_handler.cpp'
+#endif
 #endif

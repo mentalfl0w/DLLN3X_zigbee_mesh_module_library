@@ -40,7 +40,7 @@ void setup() {
   Serial.println(temp);
   dlln33.set_addr(0xFFFF); //test error report
   //dlln33.get_link_quality(YOUR_ANOTHER_CHIP_ADDR); //test link quility
-  dlln33.pin_control(DLLN3X::PIN::PIN4, DLLN3X::PIN_CONTROL::HIGH); //test pin, PIN4 is TTx, PIN5 is TRx
+  dlln33.pin_control(DLLN3X::PIN::DLLN3X_PIN4, DLLN3X::PIN_CONTROL::OUT_HIGH); //test pin, PIN4 is TTx, PIN5 is TRx
 }
 
 uint64_t interval = 5000, pre_milli = 0;

@@ -29,8 +29,8 @@ public:
         PKG_LENGTH_ERROR = 0xF9,
         PKG_DATA_ERROR = 0xFA
     };
-    enum PIN_CONTROL{ HIGH = 0x11, LOW = 0x10, READ_PIN = 0x12};
-    enum PIN{ PIN4 = 0x44, PIN5 = 0x45};
+    enum PIN_CONTROL{ OUT_HIGH = 0x11, OUT_LOW = 0x10, READ_PIN = 0x12};
+    enum PIN{ DLLN3X_PIN4 = 0x44, DLLN3X_PIN5 = 0x45};
     DLLN3X();
     ~DLLN3X();
     void init(HardwareSerial* DSerial);

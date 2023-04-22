@@ -19,6 +19,10 @@ This library is now complete, the remaining work is mainly maintenance and bug f
 
 # Change Log
 
+**V1.1.2 2023.4.22**
+
++ Modify header files to avoid compilation conflicts, add warnings for certain boards that do not support STL.(If your board are Arduino AVR architecture(like Arduino Uno), you have to comment 'const std::nothrow_t std::nothrow = { };' in 'ArduinoSTL/src/new_handler.cpp')
+
 **V1.1.1 2023.3.18**
 
 + Fix the bug of incomplete copy.
