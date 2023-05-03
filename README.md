@@ -19,6 +19,10 @@ This library is now complete, the remaining work is mainly maintenance and bug f
 
 # Change Log
 
+**V1.1.3 2023.5.3**
+
++ Bug fix, use minimized vector implementation instead of std::vector to adapt to more boards, the implementation is from [@a6c0424fa083's vector_for_arduino](https://github.com/a6c0424fa083/vector_for_arduino), which I improved slightly on.
+
 **V1.1.2 2023.4.22**
 
 + Modify header files to avoid compilation conflicts, add warnings for certain boards that do not support STL.(If your board are Arduino AVR architecture(like Arduino Uno), you have to comment 'const std::nothrow_t std::nothrow = { };' in 'ArduinoSTL/src/new_handler.cpp')

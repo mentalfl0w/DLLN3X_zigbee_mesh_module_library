@@ -5,10 +5,19 @@ using namespace zigbee_protocol;
 DLLN3X::DLLN3X() { }
 DLLN3X::~DLLN3X() { }
 
-void DLLN3X::init(HardwareSerial* DSerial)
+void DLLN3X::init(HardwareSerial* DSerial, uint32_t baudrate)
 {
     _DSerial = DSerial;
-    DSerial->begin(115200);
+    uint8_t i = 0;
+    for (; i < 13; i++)
+        if (baudrate == _baud_rate_list[i])
+        {
+            i = 20;
+            break;
+        }
+    if (i != 20)
+        return;
+    DSerial->begin(baudrate);
     DSerial->setTimeout(10000);
     rled_blink();
     read_addr();
@@ -18,10 +27,19 @@ void DLLN3X::init(HardwareSerial* DSerial)
 }
 
 #if __has_include(<SoftwareSerial.h>)
-void DLLN3X::init(SoftwareSerial* DSerial)
+void DLLN3X::init(SoftwareSerial* DSerial, uint32_t baudrate)
 {
     _DSerial = DSerial;
-    DSerial->begin(115200);
+    uint8_t i = 0;
+    for (; i < 13; i++)
+        if (baudrate == _baud_rate_list[i])
+        {
+            i = 20;
+            break;
+        }
+    if (i != 20)
+        return;
+    DSerial->begin(baudrate);
     DSerial->setTimeout(10000);
     rled_blink();
     read_addr();
@@ -49,9 +67,11 @@ ZigbeeFrame DLLN3X::recv(bool non_blocked)
 
 bool DLLN3X::send(ZigbeeFrame zf)
 {
+    bool status = false;
     if (zf.getSrcPort() < 0x80)
         return false;
-    return _DSerial->write(zf.data(), zf.size());
+    status = _DSerial->write(zf.data(),zf.size());
+    return status;
 }
 
 bool DLLN3X::send_cmd(uint8_t des_port, uint8_t arg, uint8_t* data, uint8_t data_length)
@@ -106,7 +126,8 @@ uint32_t DLLN3X::read_baudrate()
 uint8_t DLLN3X::set_baudrate(uint32_t baud_rate)
 {
     uint8_t arg = 0;
-    for (uint8_t i = 0; i < 13; i++)
+    uint8_t i = 0;
+    for (; i < 13; i++)
     {
         if (baud_rate == _baud_rate_list[i])
         {
@@ -114,6 +135,8 @@ uint8_t DLLN3X::set_baudrate(uint32_t baud_rate)
             break;
         }
     }
+    if (arg != i)
+        return CONFIG_RESPONSE::CMD_ERROR;
     uint8_t resp = rw_config(CONFIG::BAUDRATE, arg, CONFIG_RW_MASK::WRITE);
     if (resp == CONFIG_RESPONSE::DONE)
     {
@@ -180,7 +203,7 @@ uint16_t DLLN3X::rw_config(CONFIG arg, uint16_t data, CONFIG_RW_MASK mask)
         return 0;
     switch (arg) {
     case CONFIG::ADDR: {
-        if (zf.getDataLength() != 3 || zf.getData()[0] != 0x21) {
+        if (zf.getData()[0] != 0x21) {
             if (zf.getData()[0] != CONFIG_RESPONSE::DONE)
             {
                 Serial.print("DLLN3X write config error: 0x");
@@ -191,7 +214,7 @@ uint16_t DLLN3X::rw_config(CONFIG arg, uint16_t data, CONFIG_RW_MASK mask)
             return (zf.getData()[2] << 8) | zf.getData()[1];
     }
     case CONFIG::NETWORKID: {
-        if (zf.getDataLength() != 3 || zf.getData()[0] != 0x22) {
+        if (zf.getData()[0] != 0x22) {
             if (zf.getData()[0] != CONFIG_RESPONSE::DONE)
             {
                 Serial.print("DLLN3X write config error: 0x");
@@ -202,7 +225,7 @@ uint16_t DLLN3X::rw_config(CONFIG arg, uint16_t data, CONFIG_RW_MASK mask)
             return (zf.getData()[2] << 8) | zf.getData()[1];
     }
     case CONFIG::CHANNEL: {
-        if (zf.getDataLength() != 2 || zf.getData()[0] != 0x23) {
+        if (zf.getData()[0] != 0x23) {
             if (zf.getData()[0] != CONFIG_RESPONSE::DONE)
             {
                 Serial.print("DLLN3X write config error: 0x");
@@ -213,7 +236,7 @@ uint16_t DLLN3X::rw_config(CONFIG arg, uint16_t data, CONFIG_RW_MASK mask)
             return zf.getData()[1];
     }
     case CONFIG::BAUDRATE: {
-        if (zf.getDataLength() != 2 || zf.getData()[0] != 0x24) {
+        if (zf.getData()[0] != 0x24) {
            if (zf.getData()[0] != CONFIG_RESPONSE::DONE)
             {
                 Serial.print("DLLN3X write config error: 0x");

@@ -33,9 +33,9 @@ public:
     enum PIN{ DLLN3X_PIN4 = 0x44, DLLN3X_PIN5 = 0x45};
     DLLN3X();
     ~DLLN3X();
-    void init(HardwareSerial* DSerial);
+    void init(HardwareSerial* DSerial, uint32_t baudrate = 115200);
 #if __has_include(<SoftwareSerial.h>)
-    void init(SoftwareSerial* DSerial);
+    void init(SoftwareSerial* DSerial, uint32_t baudrate = 115200);
 #endif
     ZigbeeFrame recv(bool non_blocked = true);
     bool send(ZigbeeFrame zf);

@@ -6,8 +6,9 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-DLLN3X	KEYWORD1
+DLLN3X		KEYWORD1
 ZigbeeFrame	KEYWORD1
+Vector		KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
