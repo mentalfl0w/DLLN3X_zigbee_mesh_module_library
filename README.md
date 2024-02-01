@@ -19,6 +19,10 @@ This library is now complete, the remaining work is mainly maintenance and bug f
 
 # Change Log
 
+**V1.1.4 2024.2.1**
+
++ Fix the bug of vector may be accessed out of range.
+
 **V1.1.3 2023.5.3**
 
 + Bug fix, use minimized vector implementation instead of std::vector to adapt to more boards, the implementation is from [@a6c0424fa083's vector_for_arduino](https://github.com/a6c0424fa083/vector_for_arduino), which I improved slightly on.
