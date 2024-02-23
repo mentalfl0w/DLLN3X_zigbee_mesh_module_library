@@ -131,7 +131,7 @@ public:
     {
         data.clear();
         for (int i = 0; i < pack_data.size(); i++) {
-            if (pack_data[i] != 0xFE) {
+            if (pack_data[i] != 0xFE || i == pack_data.size() - 1) {
                 data.push_back(pack_data[i]);
             } else if (pack_data[i + 1] == 0xFD) {
                 data.push_back(0xFF);

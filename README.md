@@ -19,6 +19,10 @@ This library is now complete, the remaining work is mainly maintenance and bug f
 
 # Change Log
 
+**V1.1.5 2024.2.23**
+
++ Fix the bug of the pack vector may be accessed out of range.
+
 **V1.1.4 2024.2.1**
 
 + Fix the bug of vector may be accessed out of range.
