@@ -19,6 +19,10 @@ This library is now complete, the remaining work is mainly maintenance and bug f
 
 # Change Log
 
+**V1.1.6 2024.2.25**
+
++ Fix the bug of the pkg's length may longer than maximum(without head, tail and pkg length, it's 63 Bytes).
+
 **V1.1.5 2024.2.23**
 
 + Fix the bug of the pack vector may be accessed out of range.
