@@ -1,7 +1,15 @@
 # DLLN3X_zigbee_mesh_module_library
+
+<div align="center">
+    <img src="imgs/dl-ln3x.png" alt="DL-LN3X" style="width:40%; height:auto;">
+</div>
+<p align="center">DL-LN3X Module(Based on CC2530)</p>
+
 This library allows you to use DLLN3X ZigBee mesh module very easily.
 
 This library is now complete, the remaining work is mainly maintenance and bug fixes, welcome feedback by opening issues.
+
+***[点击查看中文文档](README(zh-cn).md)***
 
 # Available Features
 
@@ -37,7 +45,7 @@ This library is now complete, the remaining work is mainly maintenance and bug f
 
 **V1.1.2 2023.4.22**
 
-+ Modify header files to avoid compilation conflicts, add warnings for certain boards that do not support STL.(If your board are Arduino AVR architecture(like Arduino Uno), you have to comment 'const std::nothrow_t std::nothrow = { };' in 'ArduinoSTL/src/new_handler.cpp')
++ Modify header files to avoid compilation conflicts, add warnings for certain boards that do not support STL.(If your board are Arduino AVR architecture，like Arduino Uno, you have to comment 'const std::nothrow_t std::nothrow = { };' in 'ArduinoSTL/src/new_handler.cpp')
 
 **V1.1.1 2023.3.18**
 
@@ -46,7 +54,7 @@ This library is now complete, the remaining work is mainly maintenance and bug f
 **V1.1.0 2023.3.18**
 
 + Completely rewritten.
-+ Join the ZigbeeFrame container.
++ Add the ZigbeeFrame container.
 + Greatly improve stability.
 + Supports configuration reading and modification, link quality testing, on-board pin control, error reporting, etc.
 
