@@ -5,6 +5,8 @@
 </div>
 <p align="center">DL-LN3X Module(Based on CC2530)</p>
 
+[![DLLN3X ZigBee Mesh Module Library](https://www.ardu-badge.com/badge/DLLN3X%20ZigBee%20Mesh%20Module%20Library.svg?)](https://www.ardu-badge.com/DLLN3X%20ZigBee%20Mesh%20Module%20Library)
+
 This library allows you to use DLLN3X ZigBee mesh module very easily.
 
 This library is now complete, the remaining work is mainly maintenance and bug fixes, welcome feedback by opening issues.

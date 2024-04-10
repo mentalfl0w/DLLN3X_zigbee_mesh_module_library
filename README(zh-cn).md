@@ -5,6 +5,8 @@
 </div>
 <p align="center">DL-LN3X模块(基于CC2530)</p>
 
+[![DLLN3X ZigBee Mesh Module Library](https://www.ardu-badge.com/badge/DLLN3X%20ZigBee%20Mesh%20Module%20Library.svg?)](https://www.ardu-badge.com/DLLN3X%20ZigBee%20Mesh%20Module%20Library)
+
 开发这个库的目的是为了能够更方便地使用DL-LN3X系列紫蜂多跳自组网模块。
 
 这个库已实现厂商文档中提到的所有功能，目前剩下的工作主要是维护和修复，欢迎向我反馈问题。
